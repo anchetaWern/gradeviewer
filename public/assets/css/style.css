@@ -1,0 +1,32 @@
+.container {
+	width: 400px;
+	margin: 0 auto;
+}
+
+#logo {
+  float: left;
+  position: relative;
+  top: 16px;
+  margin-right: 10px;
+}
+
+.next {
+  float: right;
+}
+
+.dz-max-files-reached {
+  border: 1px solid red;
+}
+
+table {
+  width: 100%;
+}
+
+#grade-container {
+	clear: both;
+	margin-top: 20px;
+}
+
+#button-container {
+    clear: both;
+}

@@ -1,0 +1,4 @@
+vendor/
+uploads/*.xlsx
+storage
+.env
