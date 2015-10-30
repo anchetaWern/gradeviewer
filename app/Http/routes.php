@@ -25,38 +25,8 @@ $app->post('/upload', 'HomeController@upload');
 $app->get('/activities/add', 'HomeController@addActivities');
 $app->post('/activities/save', 'HomeController@saveActivities');
 
-$app->get('/tester', function(){
+$app->get('/activities/{id}/add', 'HomeController@addActivities');
+$app->post('/activities/{id}/save', 'HomeController@saveActivities');
 
-	$arr = array(
-		array(
-			'fname' => 'yoh',
-			'lname' => 'asakura',
-			'age' => 10
-		),
-		array(
-			'fname' => 'ichigo',
-			'lname' => 'kurosaki',
-			'age' => 20
-		)
-	);
-
-	$selected_key = '';
-	$filtered = array_filter($arr, function($row) use ($selected_key) {
-		if($row['age'] == 10){
-			//$selected_key = $key;
-			return $row;
-		}
-		
-	});
-
-	return key($filtered);
-});
-
-$app->get('/sess', function(){
-	return session(array('d' => 'luffy'));
-});
-
-$app->get('/sess2', function(){
-	$grades = session('grades');
-	return $grades;
-});
+$app->get('/subject/{id}/update', 'HomeController@viewSubject');
+$app->post('/subject/{id}/update', 'HomeController@updateSubject');

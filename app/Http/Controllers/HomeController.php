@@ -57,8 +57,8 @@ class HomeController extends BaseController {
 		$end_row = $request->input('end_row');
 
 		$setting->subject_id = $subject_id;
-		$setting->lec_xlxs = session('uploads')[0];
-		$setting->lec_xlxs = session('uploads')[1];
+		$setting->lec_xlsx = session('uploads')[0];
+		$setting->lab_xlsx = session('uploads')[1];
 		$setting->sheet_number = $sheet_number;
 		$setting->name_cell = $name_cell;
 		$setting->grade_cell = $grade_cell;
@@ -91,6 +91,10 @@ class HomeController extends BaseController {
     	
     	$subject_id = session('subject_id');
 
+		DB::table('activities')
+			->where('subject_id', '=', $subject_id)
+			->delete();
+
     	if(!empty($activities)){
 	    	foreach($activities as $act){
 				DB::table('activities')->insert(
@@ -121,7 +125,7 @@ class HomeController extends BaseController {
     }
 
 
-    function loadGrades($sheet_number, $cell_range,  $lec_xlxs, $lab_xlxs = ''){
+    function loadGrades($sheet_number, $cell_range,  $lec_xlsx, $lab_xlsx = ''){
 
     	$grades = array();
     	
@@ -130,9 +134,9 @@ class HomeController extends BaseController {
     	}
 
     	$uploads = array();
-    	$uploads[] = $lec_xlxs;
-    	if(!empty($lab_xlxs)){
-    		$uploads[] = $lab_xlxs;
+    	$uploads[] = $lec_xlsx;
+    	if(!empty($lab_xlsx)){
+    		$uploads[] = $lab_xlsx;
     	}
 
     	$uploads_path = realpath(__DIR__ . '/../../../uploads');
@@ -179,13 +183,13 @@ class HomeController extends BaseController {
 		$end_row = $subject_settings->end_row;
 		$sheet_number = $subject_settings->sheet_number;
 		$cell_range = $subject_settings->cell_range;
-		$lec_xlxs = $subject_settings->lec_xlxs;
-		$lab_xlxs = $subject_settings->lab_xlxs;
+		$lec_xlsx = $subject_settings->lec_xlsx;
+		$lab_xlsx = $subject_settings->lab_xlsx;
 
 		$page_data['start_row'] = $start_row;
 		$page_data['end_row'] = $end_row;
 
-		$grades = $this->loadGrades($sheet_number, $cell_range, $lec_xlxs, $lab_xlxs);
+		$grades = $this->loadGrades($sheet_number, $cell_range, $lec_xlsx, $lab_xlsx);
 
     	if($request->has('name')){
 
@@ -274,6 +278,73 @@ class HomeController extends BaseController {
 		}
 
     	return view('grades', $page_data);
+
+    }
+
+
+    public function viewSubject($id, Subject $subject, Setting $setting, Request $request){
+
+    	$page_data = array(
+    		'subject' => $subject->find($id),
+    		'subject_settings' => $setting->where('subject_id', '=', $id)->first()
+    	);
+    	
+    	$request->session()->flush();
+    	return view('update_subject', $page_data);
+
+    }
+
+
+    public function updateSubject($id, Subject $subject, Setting $setting, Request $request){
+
+		$title = $request->input('title');
+
+		$sub = $subject->find($id);
+    	$sub->title = $title;
+    	$sub->save();
+
+    	session(array('subject_id' => $id));
+
+    	$old_setting = $setting->find($id);
+
+    	$uploads_path = realpath(__DIR__ . '/../../../uploads');
+    	if($request->session()->has('uploads')){		
+	    	if($old_setting->lec_xlsx){
+	    		unlink($uploads_path . '/' . $old_setting->lec_xlsx);
+	    	}
+	    	if($old_setting->lab_xlsx){
+	    		unlink($uploads_path . '/' . $old_setting->lab_xlsx);
+	    	}
+    	}
+
+		$sheet_number = $request->input('sheet_number');
+		$name_cell = $request->input('name_cell');
+		$grade_cell = $request->input('grade_cell');
+		$cell_range = $request->input('cell_range');
+		$header_row = $request->input('header_row');
+		$start_row = $request->input('start_row');
+		$end_row = $request->input('end_row');
+
+		$new_setting = array(
+			'sheet_number' => $sheet_number,
+			'name_cell' => $name_cell,
+			'grade_cell' => $grade_cell,
+			'cell_range' => $cell_range,
+			'header_row' => $header_row,
+			'start_row' => $start_row,
+			'end_row' => $end_row
+		);
+
+		if($request->session()->has('uploads')){
+			$new_setting['lec_xlsx'] = session('uploads')[0];
+			$new_setting['lab_xlsx'] = session('uploads')[1];
+		}
+
+		$setting = DB::table('settings')
+			->where('subject_id', '=', $id)
+			->update($new_setting);
+
+		return redirect("activities/{$id}/add");
 
     }
 }
